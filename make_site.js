@@ -25,7 +25,7 @@ function newDir(date_str) {
     let out_dir             =  path.join('/','site', nice_date_str); // "site/2021-6-17"
 
     //Make directories if they don't exist yet
-    fs.mkdir(path.join(__dirname,out_dir), 
+    fs.mkdir(path.join(__dirname,out_dir + "__"), 
         { recursive: true }, (err) => {
             if (err) {
                 return console.error(err);
@@ -83,13 +83,17 @@ function newDir(date_str) {
                     if (/^.*\.png+$/i.test(image)) {
                         png_names.push(image);
                     }
-                    png_names.forEach((png_name) => {
-                        //let png_path = path.join(path.join(__dirname,run_hour_dir),png_name);
-                        //console.log("\npng_path: "+png_path);
-                    });
+                    
                 })
-                console.log(">>>");
-                png_names.forEach((png) => console.log(png));
+                png_names.forEach((png_name,index) => {
+                    let png_path = path.join(path.join(__dirname,run_hour_dir),png_name);
+                    let png_out_path = path.join(path.join(__dirname,out_dir),png_name);
+                    console.log("\npng_path: "+png_path);
+                    console.log("png_out_path: "+png_out_path);
+                    console.log(index);
+                });
+                //console.log(">>>");
+                //png_names.forEach((png) => console.log(png));
 
             });
         }
