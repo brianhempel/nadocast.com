@@ -24,6 +24,9 @@ date_strs.each do |date_str| # "20210617"
   # Make directories if they don't exist yet.
   FileUtils.mkdir_p(out_dir)
 
+  # testing [DELETE] Start here
+  print Dir.entries(forecast_date_dir)
+
   # e.g. ["t6z", "t0z", "t12z", "t18z"]
   run_hour_strs = Dir.entries(forecast_date_dir).grep(/t\d+z/)
 
