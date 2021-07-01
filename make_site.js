@@ -3,10 +3,17 @@
 //still need to sort pngs maybe
 //Start here - need to move callback functions of all node functions and move them
 //Q: will the / in '../main.css' always work?
+//Q: not sure if there's any point in making templates .handlebars if using toString anyway.
+//Q: make sure images are only copied over if they don't exist already?
+//Q: still unsure about let vs const
+//Idk how webkit works
 
 const fs = require('fs');
 const path = require('path')
+const Handlebars = require("handlebars");
 const files = fs.readdirSync('forecasts');
+const homeTemplate = fs.readFileSync('home_template.handlebars').toString();
+const subTemplate = fs.readFileSync('subpage_template.handlebars').toString();
 
 const nice_date_strs = [];
 
@@ -53,22 +60,13 @@ function newDir(date_str) {
         else { return 0 }
     });
 
-    //Creating the top html for the subpage
-    let out = "";
-    out += `<html>\n`;
-    out += `<head><title>Nadocast ${nice_date_str}</title>`;
-    out += `<link rel="stylesheet" href="../main.css">`;
-    out += `</head>\n`;
-    out += `<body>\n`;
-    out += `<h1>Nadocast ${nice_date_str}</h1>\n`;
+    //Create object to hold each subsection of images for a single subpage
+    const run_hours_obj = {};
 
     //Copy over images and display them in succession on subpage
     function newSubDir(run_hour) {
-        let run_hour_dir = path.join('/',forecast_date_dir, run_hour);
-        out += `<h2>${run_hour.match(/\d+/)}Z Forecasts</h2>\n`;
-        
+        let run_hour_dir = path.join('/',forecast_date_dir, run_hour);        
         let png_names = [];
-        
         let images = fs.readdirSync(path.join(__dirname,run_hour_dir));
     
         images.forEach((image) => {
@@ -78,6 +76,15 @@ function newDir(date_str) {
         });
         png_names.sort();
 
+        //Create an object for a subsection of images to add to run_hours_obj
+        let zlabel = `${run_hour.match(/\d+/)}Z Forecasts`;
+        const run_hour_obj = {
+            title: zlabel,
+            images: png_names,
+            imagesNum: png_names.length -1
+        }
+        run_hours_obj[zlabel] = run_hour_obj;
+
         //Create the path names with the png_names array, then copy them over
         png_names.forEach((png_name) => {
             let png_path = path.join(__dirname,run_hour_dir,png_name);
@@ -85,38 +92,25 @@ function newDir(date_str) {
             
             //Copy the actual images over and adding the image link to the html
             fs.copyFileSync(png_path,png_out_path);
-            out += `<img src=\"${png_name}\">\n`
         });
     }
     run_hour_strs.forEach(newSubDir);
 
+    //Write the file using the subpage template
+    const subTempComp = Handlebars.compile(subTemplate);
+    const subOut = subTempComp({
+        date: nice_date_str,
+        Z: run_hours_obj
+    });
+    fs.writeFileSync(path.join(__dirname,out_dir,"index.html"),subOut);
 
-    out += "</body>\n";
-    out += "</html>\n";
-
-    //Write the subpage to html
-    fs.writeFileSync(path.join(__dirname,out_dir,"index.html"),out);
 }
 files.forEach(newDir);
 
+
 //Generate landing page.
-out = "";
-out += "<html>\n";
-out += "<head><title>Nadocast</title>";
-out += "<link rel='stylesheet' href='main.css'>";
-out += "</head>\n";
-out += "<body>\n";
-out += "<h1>Nadocast</h1>\n";
-
-out += "<p>Eventually the latest forecast will go here.</p>\n";
-
-//Add links to subpages on landing page
-nice_date_strs.forEach((nice_date_str) => {
-    out += `<p><a href=\"${nice_date_str}/index.html\">${nice_date_str}</a></p>\n`;
-})
-
-out += "</body>\n";
-out += "</html>\n";
-
-//Write landing page
-fs.writeFileSync(path.join(__dirname,"site","index.html"),out);
+const templateComplete = Handlebars.compile(homeTemplate);
+const homeOut = templateComplete({
+    subpage: nice_date_strs
+});
+fs.writeFileSync(path.join(__dirname,"site","index.html"),homeOut);
