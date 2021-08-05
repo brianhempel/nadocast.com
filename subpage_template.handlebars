@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+     <meta charset="utf-8"/>
+    <title>Nadocast {{date}}</title>
+    <link rel="stylesheet" href="../main.css">
+    <link rel="stylesheet" href="../subpages.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+
+<body>
+    <section>
+        <h1>Nadocast {{date}}</h1>
+
+        <div class="tab">
+            {{#each Z}}
+            <button class="tablinks" onclick="openCity('{{this.title}}')">{{this.title}}</button>
+            {{/each}}
+        </div>
+
+        {{#each Z}}
+        <div id="{{this.title}}" class="tabcontent">
+            <input type="range" class="scrub" min="1" max="{{this.imagesNum}}" value="1" class="slider" id="scrubber{{@index}}">
+            <h3>{{this.title}}</h3>
+            <img id="image{{@index}}" src=""/>
+        </div>    
+        {{/each}}
+
+    </section>
+
+
+<script>
+
+    //Pull images for each time into album
+    {{#each Z}}
+    let album{{@index}} = [{{#each this.images}}"{{this}}",{{/each}}];
+    document.getElementById("image{{@index}}").src = album{{@index}}[0];
+    {{/each}}
+    
+    let allTabs = document.getElementsByClassName('tabcontent');
+    allTabs[0].style.display = "block";
+
+    for (i=1;i<allTabs.length;i++) {
+            allTabs[i].style.display = "none";
+    }
+    function openCity(city) {
+        let toOpen = document.getElementById(city);
+        for (i=0;i<allTabs.length;i++) {
+            allTabs[i].style.display = "none";
+            //allTabs[i].img.src = album
+        }
+        toOpen.style.display = "block";
+        
+    }
+    
+    function makeScrubberCallback(image, album) {
+        return function () {
+            //console.log(this.value-1)
+            image.src = album[this.value-1]
+        }
+    }
+    
+    // Function to return slider value based on cursor
+    let valueHover = 0;
+    function calcSliderPos(cursor) {
+        let sliderPos = (cursor.offsetX / cursor.target.clientWidth) * 
+        parseInt(cursor.target.getAttribute('max'),10) + .4;
+        return sliderPos;
+    };
+    
+    
+    // Adding scrubber functionality
+    {{#each Z}}
+    scrubber{{@index}}.oninput = makeScrubberCallback(image{{@index}}, album{{@index}});
+    scrubber{{@index}}.addEventListener('mousemove',function(cursor) {
+        valueHover = calcSliderPos(cursor).toFixed(2);
+        this.value = Math.trunc(valueHover);
+        image{{@index}}.src = album{{@index}}[this.value-1];
+    })
+    {{/each}}
+    
+
+
+</script>
+
+</body>
+</html>

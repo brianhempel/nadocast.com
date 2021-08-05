@@ -4,12 +4,12 @@
 //Start here - need to move callback functions of all node functions and move them
 //Q: will the / in '../main.css' always work?
 //Q: not sure if there's any point in making templates .handlebars if using toString anyway.
-//Q: make sure images are only copied over if they don't exist already?
+//Q: make sure images are only copied over if they don't exist already? what about old ones that need to be deleted?
 //Q: still unsure about let vs const
 //Idk how webkit works
 
 const fs = require('fs');
-const path = require('path')
+const path = require('path');
 const Handlebars = require("handlebars");
 const files = fs.readdirSync('forecasts');
 const homeTemplate = fs.readFileSync('home_template.handlebars').toString();
@@ -42,7 +42,7 @@ function newDir(date_str) {
     }
 
     //Initialize run_hours_strs to carry subfolder names like t0z 
-    let run_hour_strs = [];
+    let run_hour_strs = []; 
 
     //Node reads & stores the folders in each bigger folder 
     //(e.g. t0z in forecasts/20210617)
@@ -70,11 +70,17 @@ function newDir(date_str) {
         let images = fs.readdirSync(path.join(__dirname,run_hour_dir));
     
         images.forEach((image) => {
-            if (/^.*\.png+$/i.test(image)) {
+            //console.log(image);
+            if (/^.*[0-9]+-[0-9]+\.png.*$/i.test(image)) {
+                png_names.unshift(image);
+                //console.log("unshift");
+                //console.log(image);
+            }
+            else if (/^.*\.png+$/i.test(image)) {
                 png_names.push(image);
+                //console.log("push");
             } 
         });
-        png_names.sort();
 
         //Create an object for a subsection of images to add to run_hours_obj
         let zlabel = `${run_hour.match(/\d+/)}Z Forecasts`;
@@ -102,6 +108,8 @@ function newDir(date_str) {
         date: nice_date_str,
         Z: run_hours_obj
     });
+    
+    
     fs.writeFileSync(path.join(__dirname,out_dir,"index.html"),subOut);
 
 }
@@ -113,4 +121,5 @@ const templateComplete = Handlebars.compile(homeTemplate);
 const homeOut = templateComplete({
     subpage: nice_date_strs
 });
+console.log("Writing files");
 fs.writeFileSync(path.join(__dirname,"site","index.html"),homeOut);
